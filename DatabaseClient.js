@@ -12,6 +12,7 @@ const assert = require('assert');
  *   treasurer: <ObjectId>,
  *   spending_limit: <Integer>,
  *   shares: <Array of Share>,
+ *   history: <Array of TransactionHistory>,
  *   ready: <Boolean>
  * }
  *
@@ -21,6 +22,14 @@ const assert = require('assert');
  *   _id: <ObjectId>,
  *   member: <ObjectId>,
  *   contribution: <Integer>
+ * }
+ *
+ * TransactionHistory document
+ *
+ * {
+ *   _id: <ObjectId>,
+ *   to_address: <String>,
+ *   amount: <Integer>
  * }
  *
  * Member document
@@ -36,7 +45,8 @@ const assert = require('assert');
  * {
  *   _id: <ObjectId>,
  *   treasury: <ObjectId>,
- *   invite_accepted: <Boolean>
+ *   invite_accepted: <Boolean>,
+ *   unlock_requested: <Boolean>
  * }
  *
  */
@@ -154,6 +164,24 @@ class DatabaseClient {
   sendContribution(memberId, treasuryId, contribution, callback) {
     this._connectCollection(this.treasuryCollection, function(collection) {
       collection.update({_id: treasuryId, "shares.member": memberId}, {$inc: { "shares.$.contribution": contribution}}, function(err, result) {
+        assert.equal(err, null);
+        callback();
+      });
+    });
+  }
+
+  requestUnlock(memberId, treasuryId, callback) {
+    this._connectCollection(this.memberCollection, function(collection) {
+      collection.update({_id: memberId, "status.treasury": treasuryId}, {$set: { "status.$.unlock_requested": true}}, function(err, result) {
+        assert.equal(err, null);
+        callback();
+      });
+    });
+  }
+
+  sendTransaction(treasuryId, amount, to_address, callback) {
+    this._connectCollection(this.treasuryCollection, function(collection) {
+      collection.update({_id: treasuryId}, {$push: { history: {to_address: to_address, amount: amount}}}, function(err, result) {
         assert.equal(err, null);
         callback();
       });

@@ -10,6 +10,7 @@ const assert = require('assert');
  *   _id: <ObjectId>,
  *   members: <Array of ObjectId>, // all invited members
  *   treasurer: <ObjectId>,
+ *   created_by: <ObjectId>,
  *   spending_limit: <Integer>,
  *   shares: <Array of Share>,
  *   history: <Array of TransactionHistory>,
@@ -36,7 +37,8 @@ const assert = require('assert');
  *
  * {
  *   _id: <ObjectId>,
- *   phone_number: <String>, // unique
+ *   registered: <Boolean>,
+ *   phone_number: <String>, // should be unique; member not registered if null
  *   status: <Array of TreasuryStatus>
  * }
  *
@@ -85,11 +87,45 @@ class DatabaseClient {
   // CREATE
 
   insertTreasury(record, callback) {
-    this._connectCollection(this.treasuryCollection, function(collection) {
-      collection.insert(record, function(err, result) {
+    this._connectCollection(this.treasuryCollection, function(tCollection) {
+      tCollection.insert(record, function(err, result) {
         assert.equal(null, err);
-        // TODO send invites
-        callback();
+        this._connectCollection(this.memberCollection, function(mCollection) {
+          treasuryId = record._id;
+          creator = record.created_by;
+          invited_members = record.members;
+          mCollection.update({_id: creator}, {$push: { status: {treasury: treasuryId, invite_accepted: true, unlock_requested: false}}}, function(err, result) {
+            assert.equal(err, null);
+            invited_members.forEach(function(member){
+              findMemberByPhoneNumber(member.phone_number, function(result) {
+                // member exists
+                if (result.length > 0) {
+                  recordedMember = result[0]; // only the first result
+                  recordedMemberId = recordedMember._id;
+                  // update result
+                  mCollection.update({_id: recordedMemberId}, {$push: { status: {treasury: treasuryId, invite_accepted: false, unlock_requested: false}}}, function(err, result) {
+                    assert.equal(err, null);
+                    console.log("invite sent to member " + recordedMemberId);
+                  });
+                }
+                // member does not exist
+                else {
+                  // TODO temporary; replace this data collector
+                  newMemberRecord = {
+                    _id: "somehash",
+                    registered: false,
+                    phone_number: member.phone_number,
+                    status: [{treasury: treasuryId, invite_accepted: false, unlock_requested: false}]
+                  };
+                  insertMember(newMemberRecord, function() {
+                    console.log("new member added");
+                  });
+                }
+              });
+            });
+            callback();
+          });
+        });
       });
     });
   }
@@ -151,6 +187,15 @@ class DatabaseClient {
   }
 
   // UPDATE
+  
+  registerMember(memberId, callback) {
+    this._connectCollection(this.memberCollection, function(collection) {
+      collection.update({_id: memberId}, {$set: { registered: true}}, function(err, result) {
+        assert.equal(err, null);
+        callback();
+      });
+    });
+  }
 
   acceptInvite(memberId, treasuryId, callback) {
     this._connectCollection(this.memberCollection, function(collection) {

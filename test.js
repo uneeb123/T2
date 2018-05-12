@@ -1,19 +1,23 @@
-const DatabaseDriver = require ('./DatabaseDriver');
-const driver = new DatabaseDriver();
+const driver = require ('./DatabaseDriver');
+//const driver = new DatabaseDriver();
 
 async function scenario() {
-  await newMemberSignUp("1");
-  await newMemberSignUp("2");
-  await getAllMembers((members) {
-    console.log(members);
-  });
-  await createTreasury(["1", "2", "3"], "2", "1", 10);
-  await getAllMembers((members) {
-    console.log(members);
-  });
-  await getAllTreasuries((treasuries) => {
-    console.log(treasuries);
-  })
+  try {
+    await driver.newMemberSignUp("1");
+    await driver.newMemberSignUp("2");
+    await driver.getAllMembers((members) => {
+      console.log(members);
+    });
+    await driver.createTreasury(["1", "2", "3"], "2", "1", 10);
+    await driver.getAllMembers((members) => {
+      console.log(members);
+    });
+    await driver.getAllTreasuries((treasuries) => {
+      console.log(treasuries);
+    })
+  } catch(e) {
+    // swallow
+  }
 }
 
 scenario();

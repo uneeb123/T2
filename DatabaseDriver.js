@@ -2,7 +2,7 @@ const DatabaseClient = require('./DatabaseClient');
 const client = new DatabaseClient();
 const uuidv4 = require('uuid/v4');
 
-class DatabaseDriver {
+module.exports = class DatabaseDriver {
   /**
    * Creates a new Treasury
    * @param {Array} members - list of members phone numbers
@@ -13,38 +13,39 @@ class DatabaseDriver {
    *
    * @returns {Promise} created treasury id
    */
-  async createTreasury(members, treasurer, creator, spending_limit) {
+  createTreasury(members, treasurer, creator, spending_limit) {
     return new Promise((resolve, reject) => {
       treasuryId = uuidv4();
-      try {
-        creatorId = await findMemberByPhoneNumber(creator);
-      } catch(e) {
-        console.log("Driver: Creator not found!");
-      }
-      allMembersMustExist(members).then((memberIds) => {
-        treasurerId = findMemberByPhoneNumber(treasurer);
-        treasury = {
-          _id: treasuryId,
-          members: memberIds,
-          treasurer: treasurerId,
-          created_by: creatorId,
-          spending_limit: spending_limit,
-          shares: [],
-          history: [],
-          ready: false,
-        };
-        client.insertTreasury(treasury, function() {
-          console.log("Driver: New treasury (" + treasuryId + ") has been created!");
-          memberIds.forEach((memberId) => {
-            client.inviteMemberToTreasury(treasuryId, memberId, () => {
-              console.log("Driver: Member (" + memberId + ") has been invited to treasury (" + treasuryId + ")");
+      findMemberByPhoneNumber(creator).then((creator) => {
+        creatorId = creator._id;
+        allMembersMustExist(members).then((memberIds) => {
+          treasurerId = findMemberByPhoneNumber(treasurer);
+          treasury = {
+            _id: treasuryId,
+            members: memberIds,
+            treasurer: treasurerId,
+            created_by: creatorId,
+            spending_limit: spending_limit,
+            shares: [],
+            history: [],
+            ready: false,
+          };
+          client.insertTreasury(treasury, function() {
+            console.log("Driver: New treasury (" + treasuryId + ") has been created!");
+            memberIds.forEach((memberId) => {
+              client.inviteMemberToTreasury(treasuryId, memberId, () => {
+                console.log("Driver: Member (" + memberId + ") has been invited to treasury (" + treasuryId + ")");
+              });
+            });
+            client.addCreatorToTreasury(treasuryId, creatorId, () => {
+              console.log("Driver: Creator (" + memberId + ") has been added to treasury (" + treasuryId + ")");
             });
           });
-          client.addCreatorToTreasury(treasuryId, creatorId, () => {
-            console.log("Driver: Creator (" + memberId + ") has been added to treasury (" + treasuryId + ")");
-          });
+          resolve(treauryId);
+        }, (e) => {
+          console.log(e.message);
+          reject(new Error("unable to create treasury"));
         });
-        resolve(treauryId);
       }, (e) => {
         console.log(e.message);
         reject(new Error("unable to create treasury"));
@@ -125,9 +126,9 @@ class DatabaseDriver {
   /**
    * Creates and/or registers a new member when he signs up
    * @param {String} phoneNumber - member's phone number
-   * @param {Function} callback - callback to trigger when function completes
+   * @returns {Promise} member object
    */
-  newMemberSignUp(phoneNumber, callback) {
+  newMemberSignUp(phoneNumber) {
     return new Promise((resolve, reject) => {
       if (memberExists(phoneNumber)) {
         createAndRegisterMember(phoneNumber).then((memberId) => {
@@ -174,11 +175,11 @@ class DatabaseDriver {
    */
   findMemberByPhoneNumber(phoneNumber) {
     return new Promise((resolve, reject) => {
-      client.findMemberByPhone(phoneNumber, (member) => {
+      client.findMemberByPhoneNumber(phoneNumber, (member) => {
         if (member.length > 0) {
           resolve(member[0]);
         } else {
-          reject(new Error("not found");
+          reject(new Error("not found"));
         }
       });
     });
@@ -186,21 +187,19 @@ class DatabaseDriver {
 
   // HELPER functions
   
-  async allMembersMustExists(phoneNumberList) {
+  allMembersMustExists(phoneNumberList) {
     return new Promise((resolve, reject) => {
       allMemberIds = [];
       phoneNumberList.forEach((phoneNumber) => {
-        try {
-          member = await findMemberByPhoneNumber(phoneNumber);
+        findMemberByPhoneNumber(phoneNumber).then((member) => {
           allMemberIds.push(member._id);
-        } catch(error) {
-          try {
-            var newMemberId = await onlyCreateMember(phoneNumber);
-            allMemberIds.push(newMemberId);
-          } catch(e) {
+        }, (e) => {
+          onlyCreateMember(phoneNumber).then((memberId) => {
+            allMemberIds.push(memberId);
+          }, (e) => {
             reject(new Error("unable to create member"));
-          }
-        }
+          });
+        });
       });
       resolve(allMemberIds);
     });

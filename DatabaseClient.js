@@ -53,7 +53,7 @@ const assert = require('assert');
  *
  */
 
-class DatabaseClient {
+module.exports = class DatabaseClient {
   constructor() {
     let password = "v1LpAdxullM8Z8gY";
     let username = 'test_user';
@@ -142,7 +142,7 @@ class DatabaseClient {
     });
   }
 
-  findMemberByPhoneNumber(phoneNumber, callback) {
+  findMemberByPhone(phoneNumber, callback) {
     this._connectCollection(this.memberCollection, function(collection) {
       collection.find({phone_number: phoneNumber}).toArray(function(err, docs) {
         assert.equal(err, null);
@@ -234,5 +234,3 @@ class DatabaseClient {
   // TODO
   deleteMember() {}
 }
-
-module.exports = DatabaseClient;

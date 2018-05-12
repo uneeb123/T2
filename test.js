@@ -1,9 +1,13 @@
-const driver = require ('./DatabaseDriver');
-//const driver = new DatabaseDriver();
+const DatabaseDriver = require ('./DatabaseDriver');
+const driver = new DatabaseDriver();
 
 async function scenario() {
   try {
-    await driver.newMemberSignUp("1");
+    await driver.getAllMembers((members) => {
+      console.log(members);
+    });
+    var memid1 = await driver.newMemberSignUp("1");
+    console.log(memid1);
     await driver.newMemberSignUp("2");
     await driver.getAllMembers((members) => {
       console.log(members);
@@ -16,6 +20,7 @@ async function scenario() {
       console.log(treasuries);
     })
   } catch(e) {
+    console.log(e);
     // swallow
   }
 }

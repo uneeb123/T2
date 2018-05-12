@@ -3,6 +3,10 @@ const client = new DatabaseClient();
 const uuidv4 = require('uuid/v4');
 
 module.exports = class DatabaseDriver {
+
+  constructor() {
+  }
+
   /**
    * Creates a new Treasury
    * @param {Array} members - list of members phone numbers
@@ -15,12 +19,12 @@ module.exports = class DatabaseDriver {
    */
   createTreasury(members, treasurer, creator, spending_limit) {
     return new Promise((resolve, reject) => {
-      treasuryId = uuidv4();
-      findMemberByPhoneNumber(creator).then((creator) => {
-        creatorId = creator._id;
-        allMembersMustExist(members).then((memberIds) => {
-          treasurerId = findMemberByPhoneNumber(treasurer);
-          treasury = {
+      var treasuryId = uuidv4();
+      this.findMemberByPhoneNumber(creator).then((creator) => {
+        var creatorId = creator._id;
+        this._allMembersMustExist(members).then((memberIds) => {
+          var treasurerId = this.findMemberByPhoneNumber(treasurer);
+          var treasury = {
             _id: treasuryId,
             members: memberIds,
             treasurer: treasurerId,
@@ -69,8 +73,8 @@ module.exports = class DatabaseDriver {
    */
   createAndRegisterMember(phoneNumber) {
     return new Promise((resolve) => {
-      memberId = uuidv4();
-      member = {
+      var memberId = uuidv4();
+      var member = {
         _id: memberId,
         registered: true,
         phone_number: phoneNumber,
@@ -89,8 +93,8 @@ module.exports = class DatabaseDriver {
    * @returns {Promise} created member id
    */
   onlyCreateMember(phoneNumber) {
-    memberId = uuidv4();
-    member = {
+    var memberId = uuidv4();
+    var member = {
       _id: memberId,
       registered: false,
       phone_number: phoneNumber,
@@ -111,8 +115,8 @@ module.exports = class DatabaseDriver {
    */
   onlyRegisterMember(phoneNumber) {
     return new Promise((resolve, reject) => {
-      findMemberByPhoneNumber(phoneNumber).then((member) => {
-        memberId = member._id;
+      this.findMemberByPhoneNumber(phoneNumber).then((member) => {
+        var memberId = member._id;
         client.registerMember(memberId, () => {
           console.log("Driver: Existing member (" + memberId + " is now registered!");
           resolve(memberId);
@@ -130,14 +134,14 @@ module.exports = class DatabaseDriver {
    */
   newMemberSignUp(phoneNumber) {
     return new Promise((resolve, reject) => {
-      if (memberExists(phoneNumber)) {
-        createAndRegisterMember(phoneNumber).then((memberId) => {
+      if (!this.memberExists(phoneNumber)) {
+        this.createAndRegisterMember(phoneNumber).then((memberId) => {
           resolve(memberId);
         }, (e) => {
           reject(e);
         });
       } else {
-        onlyRegisterMember(phoneNumber).then((memberId) => {
+        this.onlyRegisterMember(phoneNumber).then((memberId) => {
           resolve(memberId);
         }, (e) => {
           reject(e);
@@ -151,7 +155,7 @@ module.exports = class DatabaseDriver {
    * @param {String} phoneNumber - member's phone number
    */
   memberExists(phoneNumber) {
-    findMemberByPhoneNumber(phoneNumber).then((member) => {
+    this.findMemberByPhoneNumber(phoneNumber).then((member) => {
       return true;
     }, (e) => {
       return false
@@ -187,21 +191,28 @@ module.exports = class DatabaseDriver {
 
   // HELPER functions
   
-  allMembersMustExists(phoneNumberList) {
+  _allMembersMustExists(phoneNumberList) {
     return new Promise((resolve, reject) => {
-      allMemberIds = [];
-      phoneNumberList.forEach((phoneNumber) => {
-        findMemberByPhoneNumber(phoneNumber).then((member) => {
-          allMemberIds.push(member._id);
-        }, (e) => {
-          onlyCreateMember(phoneNumber).then((memberId) => {
-            allMemberIds.push(memberId);
+      var allMemberIds = [];
+      function memberMustExist(i) {
+        if (i >= phoneNumberList.length) {
+          resolve(allMemberIds);
+        } else {
+          var phoneNumber = phoneNumberList[i];
+          this.findMemberByPhoneNumber(phoneNumber).then((member) => {
+            allMemberIds.push(member._id);
+            memberMustExist(i+1);
           }, (e) => {
-            reject(new Error("unable to create member"));
+            onlyCreateMember(phoneNumber).then((memberId) => {
+              allMemberIds.push(memberId);
+              memberMustExist(i+1);
+            }, (e) => {
+              reject(new Error("unable to create member"));
+            });
           });
-        });
-      });
-      resolve(allMemberIds);
+        }
+      }
+      memberMustExists(0);
     });
   }
 }

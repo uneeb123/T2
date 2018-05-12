@@ -64,11 +64,11 @@ module.exports = class DatabaseClient {
     this.memberCollection = "Member";
   }
 
-  _connectCollection(callback, collectionName) {
+  _connectCollection(collectionName, callback) {
     var dbName = this.dbName;
     console.log("Attempting to connect to " + dbName + ":" + collectionName);
 
-    MongoClient.connect(this.url, function(err, client) {
+    MongoClient.connect(this.url, { useNewUrlParser: true }, function(err, client) {
       assert.equal(null, err);
       if (err) {
         console.log(err.message);
@@ -142,7 +142,7 @@ module.exports = class DatabaseClient {
     });
   }
 
-  findMemberByPhone(phoneNumber, callback) {
+  findMemberByPhoneNumber(phoneNumber, callback) {
     this._connectCollection(this.memberCollection, function(collection) {
       collection.find({phone_number: phoneNumber}).toArray(function(err, docs) {
         assert.equal(err, null);

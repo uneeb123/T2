@@ -57,7 +57,7 @@ class DatabaseClient {
   constructor() {
     let password = "v1LpAdxullM8Z8gY";
     let username = 'test_user';
-    this.url = "mongodb+srv://" + username + ":" + password + "@noyou-4k2c1.mongodb.net/test";
+    this.url = "mongodb+srv://" + username + ":" + password + "@treasury-4k2c1.mongodb.net/test?retryWrites=true";
     
     this.dbName = "Test";
     this.treasuryCollection = "Treasury";
@@ -87,45 +87,10 @@ class DatabaseClient {
   // CREATE
 
   insertTreasury(record, callback) {
-    this._connectCollection(this.treasuryCollection, function(tCollection) {
-      tCollection.insert(record, function(err, result) {
+    this._connectCollection(this.treasuryCollection, function(collection) {
+      collection.insert(record, function(err, result) {
         assert.equal(null, err);
-        this._connectCollection(this.memberCollection, function(mCollection) {
-          treasuryId = record._id;
-          creator = record.created_by;
-          invited_members = record.members;
-          mCollection.update({_id: creator}, {$push: { status: {treasury: treasuryId, invite_accepted: true, unlock_requested: false}}}, function(err, result) {
-            assert.equal(err, null);
-            invited_members.forEach(function(member){
-              findMemberByPhoneNumber(member.phone_number, function(result) {
-                // member exists
-                if (result.length > 0) {
-                  recordedMember = result[0]; // only the first result
-                  recordedMemberId = recordedMember._id;
-                  // update result
-                  mCollection.update({_id: recordedMemberId}, {$push: { status: {treasury: treasuryId, invite_accepted: false, unlock_requested: false}}}, function(err, result) {
-                    assert.equal(err, null);
-                    console.log("invite sent to member " + recordedMemberId);
-                  });
-                }
-                // member does not exist
-                else {
-                  // TODO temporary; replace this data collector
-                  newMemberRecord = {
-                    _id: "somehash",
-                    registered: false,
-                    phone_number: member.phone_number,
-                    status: [{treasury: treasuryId, invite_accepted: false, unlock_requested: false}]
-                  };
-                  insertMember(newMemberRecord, function() {
-                    console.log("new member added");
-                  });
-                }
-              });
-            });
-            callback();
-          });
-        });
+        callback();
       });
     });
   }
@@ -224,7 +189,7 @@ class DatabaseClient {
     });
   }
 
-  sendTransaction(treasuryId, amount, to_address, callback) {
+  addTransactionToHistory(treasuryId, amount, to_address, callback) {
     this._connectCollection(this.treasuryCollection, function(collection) {
       collection.update({_id: treasuryId}, {$push: { history: {to_address: to_address, amount: amount}}}, function(err, result) {
         assert.equal(err, null);
@@ -233,7 +198,41 @@ class DatabaseClient {
     });
   }
 
+  inviteMemberToTreasury(treasuryId, memberId, callback) {
+    this._connectCollection(this.memberCollection, function(collection) {
+      collection.update({_id: memberId},
+        {$push: { status: {
+          treasury: treasuryId,
+          invite_accepted: false,
+          unlock_requested: false
+        }}}, function(err, result) {
+        assert.equal(err, null);
+        callback();
+      });
+    });
+  }
+
+  addCreatorToTreasury(treasuryId, memberId, callback) {
+    this._connectCollection(this.memberCollection, function(collection) {
+      collection.update({_id: memberId},
+        {$push: { status: {
+          treasury: treasuryId,
+          invite_accepted: true,
+          unlock_requested: false
+        }}}, function(err, result) {
+        assert.equal(err, null);
+        callback();
+      });
+    });
+  }
+
   // DELETE
+
+  // TODO
+  deleteTreasury() {}
+
+  // TODO
+  deleteMember() {}
 }
 
 module.exports = DatabaseClient;

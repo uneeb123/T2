@@ -54,12 +54,17 @@ const assert = require('assert');
  */
 
 module.exports = class DatabaseClient {
-  constructor() {
+  constructor(_dbName) {
     let password = "v1LpAdxullM8Z8gY";
     let username = 'test_user';
     this.url = "mongodb+srv://" + username + ":" + password + "@treasury-4k2c1.mongodb.net/test?retryWrites=true";
     
-    this.dbName = "Test2";
+    if (_dbName) {
+      this.dbName = _dbName;
+    } else {
+      // default name
+      this.dbName = "Test";
+    }
     this.treasuryCollection = "Treasury";
     this.memberCollection = "Member";
   }

@@ -1,6 +1,8 @@
 const DatabaseClient = require('./DatabaseClient');
-const client = new DatabaseClient();
 const uuidv4 = require('uuid/v4');
+
+const DATABASENAME = "Test5";
+const client = new DatabaseClient(DATABASENAME);
 
 module.exports = class DatabaseDriver {
 
@@ -45,8 +47,8 @@ module.exports = class DatabaseDriver {
               client.addCreatorToTreasury(treasuryId, creatorId, () => {
                 console.log("Driver: Creator (" + creatorId + ") has been added to treasury (" + treasuryId + ")");
               });
+              resolve(treasuryId);
             });
-            resolve(treasuryId);
           }, (e) => {
             console.log(e.message);
             reject(new Error("unable to create treasury"));
@@ -138,35 +140,47 @@ module.exports = class DatabaseDriver {
   /**
    * Creates and/or registers a new member when he signs up
    * @param {String} phoneNumber - member's phone number
-   * @returns {Promise} member object
+   * @returns {Promise} member id
    */
   newMemberSignUp(phoneNumber) {
     return new Promise((resolve, reject) => {
-      if (!this.memberExists(phoneNumber)) {
+      this.findMemberByPhoneNumber(phoneNumber).then((member) => {
+        if (member.registered) {
+          console.log("Driver: Existing member (" + member._id + ") is already registered!");
+          resolve(member._id);
+        }
+        else {
+          this.onlyRegisterMember(phoneNumber).then((memberId) => {
+            resolve(memberId);
+          }, (e) => {
+            reject(e);
+          });
+        }
+      }, (e) => {
+        // member not found
         this.createAndRegisterMember(phoneNumber).then((memberId) => {
           resolve(memberId);
         }, (e) => {
           reject(e);
         });
-      } else {
-        this.onlyRegisterMember(phoneNumber).then((memberId) => {
-          resolve(memberId);
-        }, (e) => {
-          reject(e);
-        });
-      }
+      });
     });
   }
 
   /**
    * Looks up if a member already exists in the database
    * @param {String} phoneNumber - member's phone number
+   * @returns {Promise} boolean whether member exists
    */
   memberExists(phoneNumber) {
-    this.findMemberByPhoneNumber(phoneNumber).then((member) => {
-      return true;
-    }, (e) => {
-      return false
+    return new Promise((resolve, reject) => {
+      this.findMemberByPhoneNumber(phoneNumber).then((member) => {
+        resolve(true);
+      }, (e) => {
+        // swallow
+        // ... not found
+        resolve(false);
+      });
     });
   }
 
@@ -197,7 +211,67 @@ module.exports = class DatabaseDriver {
     });
   }
 
+  getCreatedTreasuries(memberId) {
+    return new Promise((resolve, reject) => {
+      this.getAllTreasuriesForMember(memberId).then((allTreasuries) => {
+        var createdTreasuries = allTreasuries.filter(function(treasury) {
+          return (treasury.created_by == memberId);
+        }); 
+        resolve(createdTreasuries);
+      }, (e) => {
+        reject(e);
+      });
+    });
+  }
+
+  getMemberTreasuries(memberId) {
+    return new Promise((resolve, reject) => {
+      this.getAllTreasuriesForMember(memberId).then((allTreasuries) => {
+        var createdTreasuries = allTreasuries.filter(function(treasury) {
+          return ((treasury.created_by != memberId) && 
+            (treasury.members.indexOf(memberId) != -1));
+        }); 
+        resolve(createdTreasuries);
+      }, (e) => {
+        reject(e);
+      });
+    });
+  }
+
+  getAllTreasuriesForMember(memberId) {
+    return new Promise((resolve, reject) => {
+      client.getMember(memberId, (memberArray) => {
+        var member = memberArray[0];
+        var memberTreasuryIds = member.status.map(treasuryStatus => treasuryStatus.treasury);
+        this._getTreasuries(memberTreasuryIds).then((treasuries) => {
+          resolve(treasuries);
+        }, (e) => {
+          reject(e);
+        });
+      });
+    });
+  }
+
   // HELPER functions
+  
+  _getTreasuries(treasuryIds) {
+    return new Promise((resolve, reject) => {
+      var allTreasuries = [];
+      function getTreasury(i) {
+        if (i >= treasuryIds.length) {
+          resolve(allTreasuries);
+        } else {
+          var treasuryId = treasuryIds[i];
+          client.getTreasury(treasuryId, (treasuryArray) => {
+            var treasury = treasuryArray[0];
+            allTreasuries.push(treasury);
+            getTreasury(i+1);
+          });
+        }
+      }
+      getTreasury(0);
+    });
+  }
   
   _allMembersMustExist(phoneNumberList) {
     return new Promise((resolve, reject) => {

@@ -1,18 +1,17 @@
 const DatabaseDriver = require ('./DatabaseDriver');
 const driver = new DatabaseDriver();
 
-async function scenario() {
+async function scenario1() {
   try {
     await driver.getAllMembers((members) => {
       console.log(members);
     });
-    var memid1 = await driver.newMemberSignUp("1");
-    console.log(memid1);
+    await driver.newMemberSignUp("1");
     await driver.newMemberSignUp("2");
     await driver.getAllMembers((members) => {
       console.log(members);
     });
-    await driver.createTreasury(["1", "2", "3"], "2", "1", 10);
+    await driver.createTreasury(["2", "3"], "2", "1", 10);
     await driver.getAllMembers((members) => {
       console.log(members);
     });
@@ -25,4 +24,27 @@ async function scenario() {
   }
 }
 
-scenario();
+async function scenario2() {
+  try {
+    var mem1 = await driver.newMemberSignUp("1");
+    console.log(mem1);
+    var mem2 = await driver.newMemberSignUp("2");
+    console.log(mem2);
+    var mem3 = await driver.newMemberSignUp("3");
+    console.log(mem3);
+    var treasury = await driver.createTreasury(["2", "3"], "2", "1", 10);
+    var treasury = await driver.createTreasury(["3"], "2", "2", 10);
+    var list1 = await driver.getCreatedTreasuries(mem1);
+    console.log("Created treasuries by member 1");
+    console.log(list1);
+    var list2 = await driver.getCreatedTreasuries(mem2);
+    console.log("Created treasuries by member 2");
+    console.log(list2);
+    var list3 = await driver.getMemberTreasuries(mem3);
+    console.log("Member treasuries by member 3");
+    console.log(list3);
+  } catch(e) {
+    console.log(e);
+    // swallow
+  }
+}

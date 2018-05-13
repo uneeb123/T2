@@ -23,29 +23,34 @@ module.exports = class DatabaseDriver {
       this.findMemberByPhoneNumber(creator).then((creator) => {
         var creatorId = creator._id;
         this._allMembersMustExist(members).then((memberIds) => {
-          var treasurerId = this.findMemberByPhoneNumber(treasurer);
-          var treasury = {
-            _id: treasuryId,
-            members: memberIds,
-            treasurer: treasurerId,
-            created_by: creatorId,
-            spending_limit: spending_limit,
-            shares: [],
-            history: [],
-            ready: false,
-          };
-          client.insertTreasury(treasury, function() {
-            console.log("Driver: New treasury (" + treasuryId + ") has been created!");
-            memberIds.forEach((memberId) => {
-              client.inviteMemberToTreasury(treasuryId, memberId, () => {
-                console.log("Driver: Member (" + memberId + ") has been invited to treasury (" + treasuryId + ")");
+          this.findMemberByPhoneNumber(treasurer).then((treasurerObject) => {
+            var treasurerId = treasurerObject._id;
+            var treasury = {
+              _id: treasuryId,
+              members: memberIds,
+              treasurer: treasurerId,
+              created_by: creatorId,
+              spending_limit: spending_limit,
+              shares: [],
+              history: [],
+              ready: false,
+            };
+            client.insertTreasury(treasury, function() {
+              console.log("Driver: New treasury (" + treasuryId + ") has been created!");
+              memberIds.forEach((memberId) => {
+                client.inviteMemberToTreasury(treasuryId, memberId, () => {
+                  console.log("Driver: Member (" + memberId + ") has been invited to treasury (" + treasuryId + ")");
+                });
+              });
+              client.addCreatorToTreasury(treasuryId, creatorId, () => {
+                console.log("Driver: Creator (" + creatorId + ") has been added to treasury (" + treasuryId + ")");
               });
             });
-            client.addCreatorToTreasury(treasuryId, creatorId, () => {
-              console.log("Driver: Creator (" + memberId + ") has been added to treasury (" + treasuryId + ")");
-            });
+            resolve(treasuryId);
+          }, (e) => {
+            console.log(e.message);
+            reject(new Error("unable to create treasury"));
           });
-          resolve(treauryId);
         }, (e) => {
           console.log(e.message);
           reject(new Error("unable to create treasury"));
@@ -63,7 +68,10 @@ module.exports = class DatabaseDriver {
   doTransaction() {
   }
 
-  getAllTreasuries() {
+  getAllTreasuries(callback) {
+    client.getAllTreasuries((allMembers) => {
+      callback(allMembers);
+    });
   }
 
   /**
@@ -191,28 +199,28 @@ module.exports = class DatabaseDriver {
 
   // HELPER functions
   
-  _allMembersMustExists(phoneNumberList) {
+  _allMembersMustExist(phoneNumberList) {
     return new Promise((resolve, reject) => {
       var allMemberIds = [];
-      function memberMustExist(i) {
+      function memberMustExist(i, that) {
         if (i >= phoneNumberList.length) {
           resolve(allMemberIds);
         } else {
           var phoneNumber = phoneNumberList[i];
-          this.findMemberByPhoneNumber(phoneNumber).then((member) => {
+          that.findMemberByPhoneNumber(phoneNumber).then((member) => {
             allMemberIds.push(member._id);
-            memberMustExist(i+1);
+            memberMustExist(i+1, that);
           }, (e) => {
-            onlyCreateMember(phoneNumber).then((memberId) => {
+            that.onlyCreateMember(phoneNumber).then((memberId) => {
               allMemberIds.push(memberId);
-              memberMustExist(i+1);
+              memberMustExist(i+1, that);
             }, (e) => {
               reject(new Error("unable to create member"));
             });
           });
         }
       }
-      memberMustExists(0);
+      memberMustExist(0, this);
     });
   }
 }

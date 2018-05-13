@@ -59,14 +59,14 @@ module.exports = class DatabaseClient {
     let username = 'test_user';
     this.url = "mongodb+srv://" + username + ":" + password + "@treasury-4k2c1.mongodb.net/test?retryWrites=true";
     
-    this.dbName = "Test";
+    this.dbName = "Test2";
     this.treasuryCollection = "Treasury";
     this.memberCollection = "Member";
   }
 
   _connectCollection(collectionName, callback) {
     var dbName = this.dbName;
-    console.log("Attempting to connect to " + dbName + ":" + collectionName);
+    // console.log("Attempting to connect to " + dbName + ":" + collectionName);
 
     MongoClient.connect(this.url, { useNewUrlParser: true }, function(err, client) {
       assert.equal(null, err);
@@ -77,10 +77,10 @@ module.exports = class DatabaseClient {
       const db = client.db(dbName);
       const collection = db.collection(collectionName);
 
-      console.log("Successfully connected to database");
+      // console.log("Successfully connected to database");
       callback(collection);
       client.close();
-      console.log("Database connection closed");
+      // console.log("Database connection closed");
     });
   }
 

@@ -2,6 +2,9 @@ const express = require('express')
 const app = express()
 const port = 3000
 
+const DatabaseDriver = require ('./DatabaseDriver');
+const driver = new DatabaseDriver();
+
 var bodyParser = require('body-parser')
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
@@ -18,44 +21,93 @@ app.get('/', (request, response) => {
 })
 
 /*
-app.post('/create', (request, response) => {
-  // username = request.body.username;
-  try {
-    result = '';
+ * GET
+ * All the treasuries
+ */
+app.get('/treasury', (request, response) => {
+  driver.getAllTreasuries((result) => {
     response.send(result);
-  } catch(error) {
-    response.send({error: 'unknown'});
-  }
+  });
 });
 
-app.get('/user/:username', (request, response) => {
-  username = request.params.username;
-  try {
-    getUser(username, function(result) {
-      response.send(result);
-    });
-  } catch(error) {
-    response.send({error: 'unknown'});
-  }
+/*
+ * GET
+ * All the members (including invited)
+ */
+app.get('/member', (request, response) => {
+  driver.getAllMembers((result) => {
+    response.send(result);
+  });
 });
 
-app.post('/send/:to_user', (request, response) => {
-  to_user = request.params.to_user;
-  from_user = request.body.from_user;
-  console.log(request.body);
-  try {
-    sendTokens(from_user, to_user, function(error, result) {
-      if (error) {
-        response.send({error: 'unsuccessful'});
-      } else {
-        response.send(result);
-      }
-    });
-  } catch (error) {
-    response.send({error: 'unknown'});
-  }
+/*
+ * POST
+ * Create a new treasury
+ *
+ */
+app.post('/treasury', (request, response) => {
+  var invitedMembers = request.body.invited_members;
+  var treasurer = request.body.treasurer;
+  var creator = request.body.creator;
+  var limit = request.body.limit;
+  driver.createTreasury(invitedMembers, treasurer, creator, limit).then((treasuryId) => {
+    response.send(treasuryId);
+  }, (e) => {
+    response.sendStatus(500);
+  });
 });
-*/
+
+/*
+ * POST
+ * New member signed up
+ */
+app.post('/member', (request, response) => {
+  var phoneNumber = request.body.phone_number;
+  driver.newMemberSignUp(phoneNumber).then((memberId) => {
+    response.send(memberId);
+  }, (e) => {
+    response.sendStatus(500);
+  });
+});
+
+/*
+ * GET
+ * Get member by id
+ * @params {id} member id
+ */
+app.get('/member/:id', (request, response) => {
+  var memberId = request.params.id;
+  driver.getMember(memberId).then((member) => {
+    response.send(member);
+  });
+});
+
+/*
+ * GET
+ * Get treasury by id
+ * @params {id} treasury id
+ */
+app.get('/treasury/:id', (request, response) => {
+  var treasuryId = request.params.id;
+  driver.getTreasury(treasuryId).then((treasury) => {
+    response.send(treasury);
+  });
+});
+
+/*
+ * POST
+ * Update treasury by id
+ * @params {id} member id
+ * @body {json} field key and values of the treasury
+ */
+app.post('/treasury/:id', (request, response) => {
+  var treasuryId = request.params.id;
+  addTransactionToHistory(treasuryId, amount, to_address).then((treasuryId) => {
+    response.sendStatus(200);
+  }, (e) => {
+    response.sendStatus(500);
+  });
+});
 
 app.listen(port, (err) => {
   if (err) {

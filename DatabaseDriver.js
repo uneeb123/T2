@@ -273,6 +273,15 @@ module.exports = class DatabaseDriver {
     });
   }
 
+  getMember(memberId) {
+    return new Promise((resolve, reject) => {
+      client.getMember(memberId, (memberArray) => {
+        var member = memberArray[0];
+        resolve(member);
+      });
+    });
+  }
+
   // HELPER functions
   
   _getTreasuries(treasuryIds) {

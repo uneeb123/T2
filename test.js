@@ -72,5 +72,3 @@ async function scenario3() {
     // swallow
   }
 }
-
-scenario3();

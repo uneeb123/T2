@@ -48,3 +48,29 @@ async function scenario2() {
     // swallow
   }
 }
+
+async function scenario3() {
+  try {
+    var mem1 = await driver.newMemberSignUp("1");
+    console.log(mem1);
+    var mem2 = await driver.newMemberSignUp("2");
+    console.log(mem2);
+    var mem3 = await driver.newMemberSignUp("3");
+    console.log(mem3);
+    var treasuryId = await driver.createTreasury(["2", "3"], "2", "1", 10);
+    var treasury = await driver.getTreasury(treasuryId);
+    console.log(treasury);
+    await driver.addTransactionToHistory(treasuryId, 100, "x100");
+    await driver.addTransactionToHistory(treasuryId, 200, "x101");
+    var history = await driver.getTransactionHistory(treasuryId);
+    console.log(history);
+    var treasuryAgain = await driver.getTreasury(treasuryId);
+    console.log(treasuryAgain);
+
+  } catch(e) {
+    console.log(e);
+    // swallow
+  }
+}
+
+scenario3();

@@ -12,7 +12,7 @@ const assert = require('assert');
  *   treasurer: <ObjectId>,
  *   created_by: <ObjectId>,
  *   spending_limit: <Integer>,
- *   shares: <Array of Share>,
+ *   shares: <Array of Share>, // should be empty
  *   history: <Array of TransactionHistory>,
  *   ready: <Boolean>
  * }
@@ -30,7 +30,8 @@ const assert = require('assert');
  * {
  *   _id: <ObjectId>,
  *   to_address: <String>,
- *   amount: <Integer>
+ *   amount: <Integer>,
+ *   created_on: <Date>
  * }
  *
  * Member document
@@ -176,6 +177,7 @@ module.exports = class DatabaseClient {
     });
   }
 
+  // Not to be used at the moment
   sendContribution(memberId, treasuryId, contribution, callback) {
     this._connectCollection(this.treasuryCollection, function(collection) {
       collection.update({_id: treasuryId, "shares.member": memberId}, {$inc: { "shares.$.contribution": contribution}}, function(err, result) {
@@ -196,7 +198,9 @@ module.exports = class DatabaseClient {
 
   addTransactionToHistory(treasuryId, amount, to_address, callback) {
     this._connectCollection(this.treasuryCollection, function(collection) {
-      collection.update({_id: treasuryId}, {$push: { history: {to_address: to_address, amount: amount}}}, function(err, result) {
+      collection.update({_id: treasuryId}, {$push: {
+        history: {to_address: to_address, amount: amount, created_on: new Date()}
+      }}, function(err, result) {
         assert.equal(err, null);
         callback();
       });

@@ -1,7 +1,7 @@
 const DatabaseClient = require('./DatabaseClient');
 const uuidv4 = require('uuid/v4');
 
-const DATABASENAME = "Test5";
+const DATABASENAME = "Test6";
 const client = new DatabaseClient(DATABASENAME);
 
 module.exports = class DatabaseDriver {
@@ -62,12 +62,6 @@ module.exports = class DatabaseDriver {
         reject(new Error("unable to create treasury"));
       });
     });
-  }
-
-  sendContribution() {
-  }
-
-  doTransaction() {
   }
 
   getAllTreasuries(callback) {
@@ -211,6 +205,24 @@ module.exports = class DatabaseDriver {
     });
   }
 
+  addTransactionToHistory(treasuryId, amount, to_address) {
+    return new Promise((resolve, reject) => {
+      client.addTransactionToHistory(treasuryId, amount, to_address, () => {
+        console.log("Driver: Transaction " + amount + " satoshis to " + to_address + " created");
+        resolve(treasuryId);
+      });
+    });
+  }
+
+  getTransactionHistory(treasuryId) {
+    return new Promise((resolve, reject) => {
+      client.getTreasury(treasuryId, (treasuryArray) => {
+        var history = treasuryArray[0].history;
+        resolve(history);
+      });
+    });
+  }
+
   getCreatedTreasuries(memberId) {
     return new Promise((resolve, reject) => {
       this.getAllTreasuriesForMember(memberId).then((allTreasuries) => {
@@ -248,6 +260,15 @@ module.exports = class DatabaseDriver {
         }, (e) => {
           reject(e);
         });
+      });
+    });
+  }
+
+  getTreasury(treasuryId) {
+    return new Promise((resolve, reject) => {
+      client.getTreasury(treasuryId, (treasuryArray) => {
+        var treasury = treasuryArray[0];
+        resolve(treasury);
       });
     });
   }

@@ -51,7 +51,7 @@ app.post('/treasury', (request, response) => {
   var creator = request.body.creator;
   var limit = request.body.limit;
   driver.createTreasury(invitedMembers, treasurer, creator, limit).then((treasuryId) => {
-    response.send(treasuryId);
+    response.send({id: treasuryId});
   }, (e) => {
     response.sendStatus(500);
   });
@@ -64,7 +64,7 @@ app.post('/treasury', (request, response) => {
 app.post('/member', (request, response) => {
   var phoneNumber = request.body.phone_number;
   driver.newMemberSignUp(phoneNumber).then((memberId) => {
-    response.send(memberId);
+    response.send({id: memberId});
   }, (e) => {
     response.sendStatus(500);
   });

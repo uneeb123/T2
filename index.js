@@ -83,6 +83,22 @@ app.get('/member/:id', (request, response) => {
 });
 
 /*
+ * POST
+ * Change member status
+ * @params {id} member id
+ * @body {json} key: accepted_invite, value: treasury id
+ */
+app.post('/member/:id', (request, response) => {
+  var memberId = request.params.id;
+  var treasuryId = request.body.accepted_invite;
+  driver.acceptInvite(memberId, treasuryId).then((ready) => {
+    response.send(ready);
+  }, (e) => {
+    response.sendStatus(500);
+  });
+});
+
+/*
  * GET
  * Get treasury by id
  * @params {id} treasury id

@@ -213,11 +213,11 @@ module.exports = class DatabaseDriver {
           if (ready) {
             client.setTreasuryReady(treasuryId, () => {
               console.log("Driver: Treasury (" + treasuryId + ") is now ready");
-              resolve(treasuryId);
+              resolve(true);
             });
           } else {
             console.log("Driver: Treasury (" + treasuryId + ") is still not ready");
-            resolve(treasuryId);
+            resolve(false);
           }
         }, (e) => {
           reject(e);

@@ -72,3 +72,29 @@ async function scenario3() {
     // swallow
   }
 }
+
+async function scenario4() {
+  try {
+    var mem1 = await driver.newMemberSignUp("1");
+    console.log(mem1);
+    var mem2 = await driver.newMemberSignUp("2");
+    console.log(mem2);
+    var mem3 = await driver.newMemberSignUp("3");
+    console.log(mem3);
+    var treasuryId = await driver.createTreasury(["2", "3"], "2", "1", 10);
+    var treasury = await driver.getTreasury(treasuryId);
+    console.log(treasury);
+    await driver.acceptInvite(mem2, treasuryId);
+    var treasuryAgain = await driver.getTreasury(treasuryId);
+    console.log(treasuryAgain);
+    await driver.acceptInvite(mem3, treasuryId);
+    var treasuryAgainAgain = await driver.getTreasury(treasuryId);
+    console.log(treasuryAgainAgain);
+
+  } catch(e) {
+    console.log(e);
+    // swallow
+  }
+}
+
+scenario4();

@@ -102,7 +102,9 @@ app.get('/treasury/:id', (request, response) => {
  */
 app.post('/treasury/:id', (request, response) => {
   var treasuryId = request.params.id;
-  addTransactionToHistory(treasuryId, amount, to_address).then((treasuryId) => {
+  var amount = request.body.amount;
+  var to_address = request.body.to_address;
+  driver.addTransactionToHistory(treasuryId, amount, to_address).then((treasuryId) => {
     response.sendStatus(200);
   }, (e) => {
     response.sendStatus(500);

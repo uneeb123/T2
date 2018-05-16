@@ -205,6 +205,63 @@ module.exports = class DatabaseDriver {
     });
   }
 
+  acceptInvite(memberId, treasuryId) {
+    return new Promise((resolve, reject) => {
+      client.acceptInvite(memberId, treasuryId, () => {
+        console.log("Driver: Member (" + memberId + ") has accepted invite to treasury (" + treasuryId + ")");
+        this.isTreasuryReady(treasuryId).then((ready) => {
+          if (ready) {
+            client.setTreasuryReady(treasuryId, () => {
+              console.log("Driver: Treasury (" + treasuryId + ") is now ready");
+              resolve(treasuryId);
+            });
+          } else {
+            console.log("Driver: Treasury (" + treasuryId + ") is still not ready");
+            resolve(treasuryId);
+          }
+        }, (e) => {
+          reject(e);
+        });
+      });
+    });
+  }
+
+  isTreasuryReady(treasuryId) {
+    return new Promise((resolve, reject) => {
+      var allInvitesAccepted = true;
+      this.getTreasury(treasuryId).then((treasury) => {
+        var allInvitedMembers = treasury.members;
+        function memberInviteAccepted(i, that) {
+          if (i >= allInvitedMembers.length) {
+            resolve(allInvitesAccepted);
+          } else {
+            var memberId = allInvitedMembers[i];
+            that.getMember(memberId).then((member) => {
+              var allStatus = member.status;
+              var treasuryFound = allStatus.find(function(status) {
+                return (status.treasury == treasuryId);
+              });
+              if (!treasuryFound) {
+                reject(new Error("misconfigured treasury"));
+              }
+              allInvitesAccepted = allInvitesAccepted && treasuryFound.invite_accepted;
+              if (!allInvitesAccepted) {
+                resolve(false);
+              } else {
+                memberInviteAccepted(i+1, that);
+              }
+            }, (e) => {
+              reject(e);
+            });
+          }
+        }
+        memberInviteAccepted(0, this);
+      }, (e) => {
+        reject(e);
+      });
+    });
+  }
+
   addTransactionToHistory(treasuryId, amount, to_address) {
     return new Promise((resolve, reject) => {
       client.addTransactionToHistory(treasuryId, amount, to_address, () => {

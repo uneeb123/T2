@@ -235,11 +235,17 @@ module.exports = class DatabaseClient {
     });
   }
 
-  // DELETE
+  setTreasuryReady(treasuryId, callback) {
+    this._connectCollection(this.treasuryCollection, function(collection) {
+      collection.update({_id: treasuryId}, {$set: { ready: true}}, function(err, result) {
+        assert.equal(err, null);
+        callback();
+      });
+    });
+  }
 
-  // TODO
+  // TODO: Delete
   deleteTreasury() {}
 
-  // TODO
   deleteMember() {}
 }

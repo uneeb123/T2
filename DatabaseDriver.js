@@ -1,7 +1,7 @@
 const DatabaseClient = require('./DatabaseClient');
 const uuidv4 = require('uuid/v4');
 
-const DATABASENAME = "Test10";
+const DATABASENAME = "Test12";
 const client = new DatabaseClient(DATABASENAME);
 
 module.exports = class DatabaseDriver {
@@ -39,15 +39,21 @@ module.exports = class DatabaseDriver {
             };
             client.insertTreasury(treasury, function() {
               console.log("Driver: New treasury (" + treasuryId + ") has been created!");
-              memberIds.forEach((memberId) => {
-                client.inviteMemberToTreasury(treasuryId, memberId, () => {
-                  console.log("Driver: Member (" + memberId + ") has been invited to treasury (" + treasuryId + ")");
-                });
-              });
               client.addCreatorToTreasury(treasuryId, creatorId, () => {
                 console.log("Driver: Creator (" + creatorId + ") has been added to treasury (" + treasuryId + ")");
+                function inviteEachMember(i, _client) {
+                  if (i >= memberIds.length) {
+                    resolve(treasuryId);
+                  } else {
+                    var memberId = memberIds[i];
+                    _client.inviteMemberToTreasury(treasuryId, memberId, () => {
+                      console.log("Driver: Member (" + memberId + ") has been invited to treasury (" + treasuryId + ")");
+                      inviteEachMember(i+1, client);
+                    });
+                  }
+                }
+                inviteEachMember(0, client);
               });
-              resolve(treasuryId);
             });
           }, (e) => {
             console.log(e.message);

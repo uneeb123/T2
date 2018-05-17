@@ -97,4 +97,38 @@ async function scenario4() {
   }
 }
 
-scenario4();
+async function scenario5() {
+  try {
+    var mem1 = await driver.newMemberSignUp("1");
+    var mem2 = await driver.newMemberSignUp("2");
+    var mem3 = await driver.newMemberSignUp("3");
+    var mem4 = await driver.newMemberSignUp("4");
+
+    var treasury1 = await driver.createTreasury(["2", "5"], "2", "1", 10);
+
+    var treasury2 = await driver.createTreasury(["3", "4"], "1", "1", 20);
+    await driver.acceptInvite(mem3, treasury2);
+    await driver.acceptInvite(mem4, treasury2);
+    await driver.addTransactionToHistory(treasury2, 2, "0");
+    await driver.addTransactionToHistory(treasury2, -1, "x100");
+
+    var treasury3 = await driver.createTreasury(["1"], "1", "3", 5);
+
+    var treasury4 = await driver.createTreasury(["1"], "4", "4", 40);
+    await driver.acceptInvite(mem1, treasury4);
+    await driver.addTransactionToHistory(treasury4, 5, "0");
+    await driver.addTransactionToHistory(treasury4, 10, "0");
+    await driver.addTransactionToHistory(treasury4, -1, "x100");
+    await driver.addTransactionToHistory(treasury4, -2, "x101");
+    await driver.addTransactionToHistory(treasury4, 10, "0");
+    await driver.addTransactionToHistory(treasury4, -5, "x101");
+    await driver.addTransactionToHistory(treasury4, -1, "x102");
+    await driver.addTransactionToHistory(treasury4, -1, "x103");
+    await driver.addTransactionToHistory(treasury4, 1, "0");
+  } catch(e) {
+    console.log(e);
+    // swallow
+  }
+}
+
+scenario5();

@@ -1,7 +1,7 @@
 const DatabaseClient = require('./DatabaseClient');
 const uuidv4 = require('uuid/v4');
 
-const DATABASENAME = "Test6";
+const DATABASENAME = "Test10";
 const client = new DatabaseClient(DATABASENAME);
 
 module.exports = class DatabaseDriver {
@@ -264,9 +264,18 @@ module.exports = class DatabaseDriver {
 
   addTransactionToHistory(treasuryId, amount, to_address) {
     return new Promise((resolve, reject) => {
-      client.addTransactionToHistory(treasuryId, amount, to_address, () => {
-        console.log("Driver: Transaction " + amount + " satoshis to " + to_address + " created");
-        resolve(treasuryId);
+      this.isTreasuryReady(treasuryId).then((ready) => {
+        if (ready) {
+          client.addTransactionToHistory(treasuryId, amount, to_address, () => {
+            console.log("Driver: Transaction " + amount + " satoshis to " + to_address + " created");
+            resolve(treasuryId);
+          });
+        } else {
+          console.log("Driver: Treasury (" + treasuryId + ") is not ready to be used");
+          reject(new Error("not ready"));
+        }
+      }, (e) => {
+        reject(e);
       });
     });
   }

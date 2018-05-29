@@ -131,4 +131,20 @@ async function scenario5() {
   }
 }
 
-scenario5();
+async function scenario6() {
+  try {
+    var mem1 = await driver.newMemberSignUp("1");
+    var mem2 = await driver.newMemberSignUp("2");
+    
+    var treasury = await driver.createTreasury(["2"], "1", "1", 10);
+    await driver.acceptInvite(mem2, treasury);
+    await driver.addAddressToTreasury(treasury, "ABC");
+    await driver.addTransactionToHistory(treasury, 10, "0", "345", "02/03/2017");
+    await driver.addTransactionToHistory(treasury, -5, "x100", "123", (new Date()).toString());
+  } catch(e) {
+    console.log(e);
+    // swallow
+  }
+}
+
+scenario6();

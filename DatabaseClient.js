@@ -12,7 +12,8 @@ const assert = require('assert');
  *   treasurer: <ObjectId>,
  *   created_by: <ObjectId>,
  *   spending_limit: <Integer>,
- *   shares: <Array of Share>, // should be empty
+ *   shares: <Array of Share>, // TODO: not implemented
+ *   addresses: <Array of String>
  *   history: <Array of TransactionHistory>,
  *   ready: <Boolean>
  * }
@@ -31,7 +32,8 @@ const assert = require('assert');
  *   _id: <ObjectId>,
  *   to_address: <String>,
  *   amount: <Integer>,
- *   created_on: <Date>
+ *   created_on: <Date>,
+ *   tx_id: <String>
  * }
  *
  * Member document
@@ -187,6 +189,17 @@ module.exports = class DatabaseClient {
     });
   }
 
+  addAddressToTreasury(treasuryId, address, callback) {
+    this._connectCollection(this.treasuryCollection, function(collection) {
+      collection.update({_id: treasuryId}, {$push: {
+        addresses: address,
+      }}, function(err, result) {
+        assert.equal(err, null);
+        callback();
+      }); 
+    });
+  }
+
   requestUnlock(memberId, treasuryId, callback) {
     this._connectCollection(this.memberCollection, function(collection) {
       collection.update({_id: memberId, "status.treasury": treasuryId}, {$set: { "status.$.unlock_requested": true}}, function(err, result) {
@@ -196,10 +209,10 @@ module.exports = class DatabaseClient {
     });
   }
 
-  addTransactionToHistory(treasuryId, amount, to_address, callback) {
+  addTransactionToHistory(treasuryId, amount, to_address, tx_id, date, callback) {
     this._connectCollection(this.treasuryCollection, function(collection) {
       collection.update({_id: treasuryId}, {$push: {
-        history: {to_address: to_address, amount: amount, created_on: new Date()}
+        history: {to_address: to_address, amount: amount, tx_id, created_on: date}
       }}, function(err, result) {
         assert.equal(err, null);
         callback();

@@ -113,14 +113,32 @@ app.get('/treasury/:id', (request, response) => {
 /*
  * POST
  * Update treasury by id
- * @params {id} member id
+ * @params {id} treasury id
  * @body {json} field key and values of the treasury
  */
 app.post('/treasury/:id', (request, response) => {
   var treasuryId = request.params.id;
-  var amount = request.body.amount;
-  var to_address = request.body.to_address;
-  driver.addTransactionToHistory(treasuryId, amount, to_address).then((treasuryId) => {
+  var amount = request.body.amount; // positive is incoming, negative is outgoing
+  var to_address = request.body.to_address; // 0 represents our address
+  var tx_id = request.body.tx_id;
+  var date = request.body.date;
+  driver.addTransactionToHistory(treasuryId, amount, to_address, tx_id, date).then((treasuryId) => {
+    response.sendStatus(200);
+  }, (e) => {
+    response.sendStatus(500);
+  });
+});
+
+/*
+ * POST
+ * Add new address to treasury
+ * @param {id} treasury id
+ * @body {json} new address to be added
+ */
+app.post('/treasury/:id/addr', (request, response) => {
+  var treasuryId = request.params.id;
+  var address = request.body.address;
+  driver.addAddressToTreasury(treasuryId, address).then(() => {
     response.sendStatus(200);
   }, (e) => {
     response.sendStatus(500);

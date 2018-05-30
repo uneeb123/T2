@@ -268,18 +268,19 @@ module.exports = class DatabaseDriver {
     });
   }
 
-  addTransactionToHistory(treasuryId, amount, to_address, tx_id, date) {
+  addTransactionToHistory(treasuryId, amount, to_address, tx_id, created_on) {
     return new Promise((resolve, reject) => {
       this.isTreasuryReady(treasuryId).then((ready) => {
         if (ready) {
-          var jsDate = new Date(date);
+          var jsDate = new Date(created_on);
           if (isNaN(jsDate.getTime())) {
             reject(new Error("invalid date"));
+          } else {
+            client.addTransactionToHistory(treasuryId, amount, to_address, tx_id, jsDate, () => {
+              console.log("Driver: Transaction " + amount + " satoshis to " + to_address + " created on " + jsDate + " tx_id (" + tx_id + ")");
+              resolve(treasuryId);
+            });
           }
-          client.addTransactionToHistory(treasuryId, amount, to_address, tx_id, jsDate, () => {
-            console.log("Driver: Transaction " + amount + " satoshis to " + to_address + " created on " + jsDate + " tx_id (" + tx_id + ")");
-            resolve(treasuryId);
-          });
         } else {
           console.log("Driver: Treasury (" + treasuryId + ") is not ready to be used");
           reject(new Error("not ready"));

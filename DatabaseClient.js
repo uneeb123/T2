@@ -32,7 +32,7 @@ const assert = require('assert');
  *   _id: <ObjectId>,
  *   to_address: <String>,
  *   amount: <Integer>,
- *   created_on: <Date>,
+ *   created_on: <Date>, // must be in UTC
  *   tx_id: <String>
  * }
  *
@@ -68,6 +68,7 @@ module.exports = class DatabaseClient {
       // default name
       this.dbName = "Test";
     }
+
     this.treasuryCollection = "Treasury";
     this.memberCollection = "Member";
   }
@@ -209,10 +210,10 @@ module.exports = class DatabaseClient {
     });
   }
 
-  addTransactionToHistory(treasuryId, amount, to_address, tx_id, date, callback) {
+  addTransactionToHistory(treasuryId, amount, to_address, tx_id, created_on, callback) {
     this._connectCollection(this.treasuryCollection, function(collection) {
       collection.update({_id: treasuryId}, {$push: {
-        history: {to_address: to_address, amount: amount, tx_id, created_on: date}
+        history: {to_address: to_address, amount: amount, tx_id: tx_id, created_on: created_on}
       }}, function(err, result) {
         assert.equal(err, null);
         callback();

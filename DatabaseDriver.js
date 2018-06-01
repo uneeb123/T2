@@ -1,7 +1,7 @@
 const DatabaseClient = require('./DatabaseClient');
 const uuidv4 = require('uuid/v4');
 
-const DATABASENAME = "Test15";
+const DATABASENAME = "Test17";
 const client = new DatabaseClient(DATABASENAME);
 
 module.exports = class DatabaseDriver {
@@ -35,6 +35,7 @@ module.exports = class DatabaseDriver {
               spending_limit: spending_limit,
               shares: [],
               history: [],
+              balance: 0,
               ready: false,
             };
             client.insertTreasury(treasury, function() {
@@ -268,7 +269,7 @@ module.exports = class DatabaseDriver {
     });
   }
 
-  addTransactionToHistory(treasuryId, amount, to_address, tx_id, created_on) {
+  addTransactionToHistory(treasuryId, amount, to_address, tx_id, fee, created_on) {
     return new Promise((resolve, reject) => {
       this.isTreasuryReady(treasuryId).then((ready) => {
         if (ready) {
@@ -276,7 +277,14 @@ module.exports = class DatabaseDriver {
           if (isNaN(jsDate.getTime())) {
             reject(new Error("invalid date"));
           } else {
-            client.addTransactionToHistory(treasuryId, amount, to_address, tx_id, jsDate, () => {
+            var history = {
+              to_address: to_address,
+              amount: amount,
+              tx_id: tx_id,
+              created_on: jsDate,
+              fee: fee
+            };
+            client.addTransactionToHistory(treasuryId, history, () => {
               console.log("Driver: Transaction " + amount + " satoshis to " + to_address + " created on " + jsDate + " tx_id (" + tx_id + ")");
               resolve(treasuryId);
             });
@@ -287,6 +295,15 @@ module.exports = class DatabaseDriver {
         }
       }, (e) => {
         reject(e);
+      });
+    });
+  }
+
+  updateTreasuryBalance(treasuryId, amount) {
+    return new Promise((resolve, reject) => {
+      client.updateTreasuryBalance(treasuryId, amount, () => {
+        console.log("Driver: Treasury balance is now updated to " + amount + " satoshis");
+        resolve(treasuryId);
       });
     });
   }

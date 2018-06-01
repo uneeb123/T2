@@ -122,8 +122,14 @@ app.post('/treasury/:id', (request, response) => {
   var to_address = request.body.to_address; // 0 represents our address
   var tx_id = request.body.tx_id;
   var created_on = request.body.created_on;
-  driver.addTransactionToHistory(treasuryId, amount, to_address, tx_id, created_on).then((treasuryId) => {
-    response.sendStatus(200);
+  var fee = request.body.fee;
+  var balance = request.body.balance;
+  driver.addTransactionToHistory(treasuryId, amount, to_address, tx_id, fee, created_on).then((treasuryId) => {
+    driver.updateTreasuryBalance(treasuryId, amount).then((treasuryId) => {
+      response.sendStatus(200);
+    }, (e) => {
+      response.sendStatus(500);
+    });
   }, (e) => {
     console.log(e);
     response.sendStatus(500);

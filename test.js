@@ -136,11 +136,27 @@ async function scenario6() {
     var mem1 = await driver.newMemberSignUp("1");
     var mem2 = await driver.newMemberSignUp("2");
     
-    var treasury = await driver.createTreasury(["2"], "1", "1", 10);
+    var treasury = await driver.createTreasury(["2"], "1", "1", 100);
     await driver.acceptInvite(mem2, treasury);
     await driver.addAddressToTreasury(treasury, "ABC");
-    await driver.addTransactionToHistory(treasury, 10, "0", "345", "02/03/2017");
-    await driver.addTransactionToHistory(treasury, -5, "x100", "123", (new Date()).toString());
+    await driver.addTransactionToHistory(treasury, 10, "0", "345", 1 ,"02/03/2017");
+    await driver.updateTreasuryBalance(treasury, 100);
+    await driver.addTransactionToHistory(treasury, -5, "x100", "123", 2,  "02/03/2017");
+    await driver.updateTreasuryBalance(treasury, 900);
+    await driver.addTransactionToHistory(treasury, -12, "x102", "124", 3, "04/03/2018");
+    await driver.addTransactionToHistory(treasury, -10, "x101", "125", 2, "03/04/2016");
+  } catch(e) {
+    console.log(e);
+    // swallow
+  }
+}
+
+async function scenario7() {
+  try {
+    var mem1 = await driver.newMemberSignUp("1");
+    var mem2 = await driver.newMemberSignUp("2");
+    var treasury = await driver.createTreasury(["2"], "1", "1", 10000);
+    await driver.acceptInvite(mem2, treasury);
   } catch(e) {
     console.log(e);
     // swallow

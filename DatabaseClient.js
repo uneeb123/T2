@@ -9,9 +9,10 @@ const assert = require('assert');
  * {
  *   _id: <ObjectId>,
  *   members: <Array of ObjectId>, // all invited members
+ *   balance: <Number>, // satoshis
  *   treasurer: <ObjectId>,
  *   created_by: <ObjectId>,
- *   spending_limit: <Integer>,
+ *   spending_limit: <Number>, // satoshis
  *   shares: <Array of Share>, // TODO: not implemented
  *   addresses: <Array of String>
  *   history: <Array of TransactionHistory>,
@@ -23,7 +24,7 @@ const assert = require('assert');
  * {
  *   _id: <ObjectId>,
  *   member: <ObjectId>,
- *   contribution: <Integer>
+ *   contribution: <Number>
  * }
  *
  * TransactionHistory document
@@ -31,7 +32,8 @@ const assert = require('assert');
  * {
  *   _id: <ObjectId>,
  *   to_address: <String>,
- *   amount: <Integer>,
+ *   amount: <Number>, // in satoshis
+ *   fee: <Number>, // in satoshis
  *   created_on: <Date>, // must be in UTC
  *   tx_id: <String>
  * }
@@ -201,6 +203,15 @@ module.exports = class DatabaseClient {
     });
   }
 
+  updateTreasuryBalance(treasuryId, amount, callback) {
+    this._connectCollection(this.treasuryCollection, function(collection) {
+      collection.update({_id: treasuryId}, {$set: { balance: amount}}, function(err, result) {
+        assert.equal(err, null);
+        callback();
+      });
+    });
+  }
+
   requestUnlock(memberId, treasuryId, callback) {
     this._connectCollection(this.memberCollection, function(collection) {
       collection.update({_id: memberId, "status.treasury": treasuryId}, {$set: { "status.$.unlock_requested": true}}, function(err, result) {
@@ -210,10 +221,16 @@ module.exports = class DatabaseClient {
     });
   }
 
-  addTransactionToHistory(treasuryId, amount, to_address, tx_id, created_on, callback) {
+  addTransactionToHistory(treasuryId, history, callback) {
     this._connectCollection(this.treasuryCollection, function(collection) {
       collection.update({_id: treasuryId}, {$push: {
-        history: {to_address: to_address, amount: amount, tx_id: tx_id, created_on: created_on}
+        history: {
+          to_address: history.to_address,
+          amount: history.amount,
+          tx_id: history.tx_id,
+          created_on: history.created_on,
+          fee: history.fee
+        }
       }}, function(err, result) {
         assert.equal(err, null);
         callback();

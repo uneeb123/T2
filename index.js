@@ -123,13 +123,25 @@ app.post('/treasury/:id', (request, response) => {
   var tx_id = request.body.tx_id;
   var created_on = request.body.created_on;
   var fee = request.body.fee;
-  var balance = request.body.balance;
   driver.addTransactionToHistory(treasuryId, amount, to_address, tx_id, fee, created_on).then((treasuryId) => {
-    driver.updateTreasuryBalance(treasuryId, amount).then((treasuryId) => {
-      response.sendStatus(200);
-    }, (e) => {
-      response.sendStatus(500);
-    });
+    response.sendStatus(200);
+  }, (e) => {
+    console.log(e);
+    response.sendStatus(500);
+  });
+});
+
+/*
+ * POST
+ * Update treasury balance by id
+ * @params {id} treasury id
+ * @body {json} balance of treasury
+ */
+app.post('/treasury/:id/balance', (request, response) => {
+  var treasuryId = request.params.id;
+  var balance = request.body.balance;
+  driver.updateTreasuryBalance(treasuryId, balance).then((treasuryId) => {
+    response.sendStatus(200);
   }, (e) => {
     console.log(e);
     response.sendStatus(500);

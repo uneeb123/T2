@@ -1,7 +1,7 @@
 const DatabaseClient = require('./DatabaseClient');
 const uuidv4 = require('uuid/v4');
 
-const DATABASENAME = "Test17";
+const DATABASENAME = "Test21";
 const client = new DatabaseClient(DATABASENAME);
 
 module.exports = class DatabaseDriver {
@@ -273,6 +273,7 @@ module.exports = class DatabaseDriver {
     return new Promise((resolve, reject) => {
       this.isTreasuryReady(treasuryId).then((ready) => {
         if (ready) {
+          // NOTE THIS IS UTC
           var jsDate = new Date(created_on);
           if (isNaN(jsDate.getTime())) {
             reject(new Error("invalid date"));
@@ -285,7 +286,7 @@ module.exports = class DatabaseDriver {
               fee: fee
             };
             client.addTransactionToHistory(treasuryId, history, () => {
-              console.log("Driver: Transaction " + amount + " satoshis to " + to_address + " created on " + jsDate + " tx_id (" + tx_id + ")");
+              console.log("Driver: Transaction " + amount + " satoshis to " + to_address + " created on " + jsDate.toISOString() + " tx_id (" + tx_id + ")");
               resolve(treasuryId);
             });
           }

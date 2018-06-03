@@ -1,7 +1,6 @@
 const DatabaseDriver = require ('./DatabaseDriver');
 const driver = new DatabaseDriver();
 
-// NOTE tests are using dates in PST
 async function scenario1() {
   try {
     var addr1 = "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2";
@@ -33,8 +32,8 @@ async function scenario1() {
     var treasury2 = await driver.createTreasury(["3", "4"], "1", "1", 20000);
     await driver.acceptInvite(mem3, treasury2);
     await driver.acceptInvite(mem4, treasury2);
-    await driver.addTransactionToHistory(treasury2, 20000, "0", tx1, 10000 ,"02/03/2017");
-    await driver.addTransactionToHistory(treasury2, -10000, addr1, tx2, 10000 ,"03/03/2017");
+    await driver.addTransactionToHistory(treasury2, 20000, "0", tx1, 10000 ,new Date("02/03/2017").getTime());
+    await driver.addTransactionToHistory(treasury2, -10000, addr1, tx2, 10000 ,new Date("03/03/2017").getTime());
     await driver.updateTreasuryBalance(treasury2, 10000);
     await driver.addAddressToTreasury(treasury2, addr4);
 
@@ -42,15 +41,15 @@ async function scenario1() {
 
     var treasury4 = await driver.createTreasury(["1"], "4", "4", 400000);
     await driver.acceptInvite(mem1, treasury4);
-    await driver.addTransactionToHistory(treasury4, 50000, "0", tx3, 10000 ,"03/03/2018");
-    await driver.addTransactionToHistory(treasury4, 100000, "0", tx4, 15000 ,"04/04/2018");
-    await driver.addTransactionToHistory(treasury4, -10000, addr2, tx5, 10000 ,"05/04/2018");
-    await driver.addTransactionToHistory(treasury4, -20000, addr1, tx6, 10000 ,"05/05/2018");
-    await driver.addTransactionToHistory(treasury4, 100000, "0", tx7, 10000 ,"05/06/2018");
-    await driver.addTransactionToHistory(treasury4, 500000, "0", tx8, 20000 ,"05/08/2018");
-    await driver.addTransactionToHistory(treasury4, -10000, addr3, tx9, 10000 ,"05/12/2018");
-    await driver.addTransactionToHistory(treasury4, -10000, addr4, tx10, 10000 ,"05/13/2018");
-    await driver.addTransactionToHistory(treasury4, 10000, "0", tx11, 10000 ,"05/15/2018");
+    await driver.addTransactionToHistory(treasury4, 50000, "0", tx3, 10000 , new Date("03/03/2018").getTime());
+    await driver.addTransactionToHistory(treasury4, 100000, "0", tx4, 15000 , new Date("04/04/2018").getTime());
+    await driver.addTransactionToHistory(treasury4, -10000, addr2, tx5, 10000 , new Date("05/04/2018").getTime());
+    await driver.addTransactionToHistory(treasury4, -20000, addr1, tx6, 10000 , new Date("05/05/2018").getTime());
+    await driver.addTransactionToHistory(treasury4, 100000, "0", tx7, 10000 , new Date("05/06/2018").getTime());
+    await driver.addTransactionToHistory(treasury4, 500000, "0", tx8, 20000 , new Date("05/08/2018").getTime());
+    await driver.addTransactionToHistory(treasury4, -10000, addr3, tx9, 10000 , new Date("05/12/2018").getTime());
+    await driver.addTransactionToHistory(treasury4, -10000, addr4, tx10, 10000 , new Date("05/13/2018").getTime());
+    await driver.addTransactionToHistory(treasury4, 10000, "0", tx11, 10000 , new Date().getTime());
     await driver.updateTreasuryBalance(treasury4, 710000);
     await driver.addAddressToTreasury(treasury4, addr5);
   } catch(e) {
@@ -60,26 +59,6 @@ async function scenario1() {
 }
 
 async function scenario2() {
-  try {
-    var mem1 = await driver.newMemberSignUp("1");
-    var mem2 = await driver.newMemberSignUp("2");
-    
-    var treasury = await driver.createTreasury(["2"], "1", "1", 100);
-    await driver.acceptInvite(mem2, treasury);
-    await driver.addAddressToTreasury(treasury, "ABC");
-    await driver.addTransactionToHistory(treasury, 10, "0", "345", 1 ,"02/03/2017");
-    await driver.updateTreasuryBalance(treasury, 100);
-    await driver.addTransactionToHistory(treasury, -5, "x100", "123", 2,  "02/03/2017");
-    await driver.updateTreasuryBalance(treasury, 900);
-    await driver.addTransactionToHistory(treasury, -12, "x102", "124", 3, "04/03/2018");
-    await driver.addTransactionToHistory(treasury, -10, "x101", "125", 2, "03/04/2016");
-  } catch(e) {
-    console.log(e);
-    // swallow
-  }
-}
-
-async function scenario3() {
   try {
     var mem1 = await driver.newMemberSignUp("1");
     var mem2 = await driver.newMemberSignUp("2");

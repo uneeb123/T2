@@ -34,7 +34,7 @@ const assert = require('assert');
  *   to_address: <String>,
  *   amount: <Number>, // in satoshis
  *   fee: <Number>, // in satoshis
- *   created_on: <Date>, // must be in UTC
+ *   timestamp: <Number>,
  *   tx_id: <String>
  * }
  *
@@ -228,7 +228,7 @@ module.exports = class DatabaseClient {
           to_address: history.to_address,
           amount: history.amount,
           tx_id: history.tx_id,
-          created_on: history.created_on,
+          timestamp: history.timestamp,
           fee: history.fee
         }
       }}, function(err, result) {

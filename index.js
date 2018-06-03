@@ -121,9 +121,9 @@ app.post('/treasury/:id', (request, response) => {
   var amount = request.body.amount; // positive is incoming, negative is outgoing
   var to_address = request.body.to_address; // 0 represents our address
   var tx_id = request.body.tx_id;
-  var created_on = request.body.created_on;
+  var timestamp = request.body.timestamp;
   var fee = request.body.fee;
-  driver.addTransactionToHistory(treasuryId, amount, to_address, tx_id, fee, created_on).then((treasuryId) => {
+  driver.addTransactionToHistory(treasuryId, amount, to_address, tx_id, fee, timestamp).then((treasuryId) => {
     response.sendStatus(200);
   }, (e) => {
     console.log(e);

@@ -1,7 +1,7 @@
 const DatabaseClient = require('./DatabaseClient');
 const uuidv4 = require('uuid/v4');
 
-const DATABASENAME = "Test22";
+const DATABASENAME = "Test23";
 const client = new DatabaseClient(DATABASENAME);
 
 module.exports = class DatabaseDriver {
@@ -269,27 +269,21 @@ module.exports = class DatabaseDriver {
     });
   }
 
-  addTransactionToHistory(treasuryId, amount, to_address, tx_id, fee, created_on) {
+  addTransactionToHistory(treasuryId, amount, to_address, tx_id, fee, timestamp) {
     return new Promise((resolve, reject) => {
       this.isTreasuryReady(treasuryId).then((ready) => {
         if (ready) {
-          // NOTE THIS IS UTC
-          var jsDate = new Date(created_on);
-          if (isNaN(jsDate.getTime())) {
-            reject(new Error("invalid date"));
-          } else {
-            var history = {
-              to_address: to_address,
-              amount: amount,
-              tx_id: tx_id,
-              created_on: jsDate,
-              fee: fee
-            };
-            client.addTransactionToHistory(treasuryId, history, () => {
-              console.log("Driver: Transaction " + amount + " satoshis to " + to_address + " created on " + jsDate.toISOString() + " tx_id (" + tx_id + ")");
-              resolve(treasuryId);
-            });
-          }
+          var history = {
+            to_address: to_address,
+            amount: amount,
+            tx_id: tx_id,
+            timestamp: timestamp,
+            fee: fee
+          };
+          client.addTransactionToHistory(treasuryId, history, () => {
+            console.log("Driver: Transaction " + amount + " satoshis to " + to_address + " created on " + timestamp + " tx_id (" + tx_id + ")");
+            resolve(treasuryId);
+          });
         } else {
           console.log("Driver: Treasury (" + treasuryId + ") is not ready to be used");
           reject(new Error("not ready"));

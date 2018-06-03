@@ -1,7 +1,7 @@
 const DatabaseClient = require('./DatabaseClient');
 const uuidv4 = require('uuid/v4');
 
-const DATABASENAME = "Test21";
+const DATABASENAME = "Test22";
 const client = new DatabaseClient(DATABASENAME);
 
 module.exports = class DatabaseDriver {
